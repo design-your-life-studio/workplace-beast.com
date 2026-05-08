@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>你是哪種職場神獸？ | 心理測驗</title>
+
+    <!-- 社群分享縮圖標籤 (不影響頁面版面) -->
+    <meta property="og:title" content="你是哪種職場神獸？ | 心理測驗">
+    <meta property="og:description" content="在危機四伏的職場叢林中，你扮演著什麼樣的角色？只需 5 題，立刻測出你的隱藏屬性！">
+    <meta property="og:image" content="share-preview.jpg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="share-preview.jpg">
+    <link rel="image_src" href="share-preview.jpg">
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- 引入 Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --bg-color: #FFE500;
+            --dot-color: #111;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(var(--dot-color) 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.4s ease;
+        }
+
+        /* 螢幕震動效果 */
+        @keyframes screenShake {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-5px, -5px); }
+            20% { transform: translate(5px, 5px); }
+            30% { transform: translate(-5px, 5px); }
+            40% { transform: translate(5px, -5px); }
+            50% { transform: translate(-2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+        .shake-active {
+            animation: screenShake 0.4s ease-out;
+        }
+
+        body.result-mode {
+            --bg-color: #ec4899;
+            --dot-color: #ffffff;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100dvh; 
+            background-color: transparent; 
+            position: relative;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ================= 跑馬燈動畫 ================= */
+        .marquee-bar {
+            background-color: #111;
+            color: white;
+            padding: 12px 0; 
+            overflow: hidden;
+            white-space: nowrap;
+            z-index: 100;
+            border-bottom: 2px solid #111;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .marquee-inner {
+            display: flex;
+            width: max-content;
+            animation: marquee-seamless 15s linear infinite;
+        }
+
+        .marquee-content {
+            display: flex;
+            padding-right: 40px; 
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        @keyframes marquee-seamless {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ================= 音樂控制按鈕 ================= */
+        #music-toggle {
+            position: absolute;
+            top: 120px; 
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 3px solid #111;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #111;
+            transition: all 0.2s;
+        }
+        #music-toggle:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        /* ================= 普普風爆裂動態效果 (含 GO!) ================= */
+        .pop-burst-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 500;
+            display: none;
+            overflow: hidden;
+        }
+
+        .pop-burst-overlay.active {
+            display: block;
+        }
+
+        .burst-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 160vmax;
+            height: 160vmax;
+            background-color: #FF00FF; 
+            background-image: radial-gradient(white 20%, transparent 20%);
+            background-size: 40px 40px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .burst-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0) rotate(-15deg);
+            color: #ffffff;
+            font-size: clamp(6rem, 25vw, 10rem);
+            font-weight: 900;
+            font-style: italic;
+            text-align: center;
+            line-height: 1;
+            white-space: nowrap;
+            z-index: 510;
+            text-shadow: 
+                -5px -5px 0 #111,  
+                 5px -5px 0 #111,
+                -5px  5px 0 #111,
+                 4px  4px 0 #111,
+                 15px 15px 0 #FFE500; 
+            opacity: 0;
+        }
+
+        .pop-burst-overlay.active .burst-circle {
+            animation: burstEffect 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .pop-burst-overlay.active .burst-text {
+            animation: textPopEffect 0.5s cubic-bezier(0.17, 0.67, 0.5, 1.3) forwards;
+        }
+
+        @keyframes burstEffect {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.05); opacity: 0; }
+        }
+
+        @keyframes textPopEffect {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.4) rotate(-5deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.6) rotate(10deg); opacity: 0; }
+        }
+
+        /* ================= 頁面基礎設定 ================= */
+        .page {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 20px; 
+            box-sizing: border-box;
+            overflow-y: auto; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .title-sup {
+            font-size: 1.5rem; 
+            font-weight: 900;
+            color: #111827;
+            background: #fff;
+            padding: 4px 24px;
+            border-radius: 24px;
+            border: 2.5px solid #111;
+            box-shadow: 3px 3px 0 #111;
+            transform: rotate(-4deg);
+            z-index: 2;
+            letter-spacing: 2px;
+            animation: floatUpDownSup 3s ease-in-out infinite;
+        }
+
+        .title-main {
+            font-size: clamp(4.5rem, 20vw, 5.5rem); 
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 2px;
+            line-height: 1.1;
+            text-shadow: 
+                -2px -2px 0 #111827, 
+                 0px -2px 0 #111827, 
+                 2px -2px 0 #111827, 
+                 2px  0px 0 #111827, 
+                 2px  2px 0 #111827, 
+                 0px  2px 0 #111827, 
+                -2px  2px 0 #111827, 
+                -2px  0px 0 #111827,
+                4px 4px 0 #ec4899,
+                7px 7px 0 #8b5cf6;
+            transform: rotate(2deg);
+            white-space: nowrap;
+            animation: floatUpDownMain 3s ease-in-out infinite;
+        }
+
+        @keyframes floatUpDownMain {
+            0%, 100% { transform: translateY(0) rotate(2deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
+        }
+        @keyframes floatUpDownSup {
+            0%, 100% { transform: translateY(0) rotate(-4deg); }
+            50% { transform: translateY(-8px) rotate(-5deg); }
+        }
+
+        /* ================= 選項樣式 ================= */
+        .quiz-option {
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .quiz-option:active, .quiz-option.selected {
+            transform: translate(4px, 4px);
+            box-shadow: none !important;
+            background-color: #FFD306 !important;
+        }
+
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background-color: #111;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 900;
+            z-index: 1100;
+            opacity: 0;
+            transition: all 0.3s;
+            border: 2px solid white;
+            white-space: nowrap;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        #share-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #share-modal-overlay.active { display: block; opacity: 1; }
+        #share-modal {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            width: 100%;
+            max-width: 414px;
+            background-color: white;
+            border-top: 4px solid #111;
+            border-top-left-radius: 32px;
+            border-top-right-radius: 32px;
+            padding: 24px;
+            padding-bottom: calc(40px + env(safe-area-inset-bottom));
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1001;
+        }
+        #share-modal.active { transform: translate(-50%, 0); }
+    </style>
+</head>
+<body id="main-body">
+
+    <!-- 普普風爆裂動畫容器 -->
+    <div id="pop-burst" class="pop-burst-overlay">
+        <div class="burst-circle"></div>
+        <div class="burst-text">GO!</div>
+    </div>
+
+    <!-- 背景音樂音軌 -->
+    <audio id="bg-music" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- 一般按鈕點擊音效 -->
+    <audio id="click-sfx" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="toast">提示訊息</div>
+
+    <div id="app-container">
+        <!-- 音樂控制開關 -->
+        <div id="music-toggle" onclick="toggleMusic()">
+            <i id="music-icon" class="ph-bold ph-speaker-slash text-xl text-[#111]"></i>
+        </div>
+
+        <!-- 頂端跑馬燈 -->
+        <div class="marquee-bar">
+            <div class="marquee-inner">
+                <div class="marquee-content">探索你的隱藏職場人格 ✦2026 WORKPLACE BEAST TEST✦ 探索你的隱藏職場人格 ✦2026 WORKPLACE BEAST TEST✦</div>
+                <div class="marquee-content">探索你的隱藏職場人格 ✦2026 WORKPLACE BEAST TEST✦ 探索你的隱藏職場人格 ✦2026 WORKPLACE BEAST TEST✦</div>
+            </div>
+        </div>
+
+        <!-- 首頁 -->
+        <div id="page-home" class="page active">
+            <div class="flex flex-col items-center h-full pt-12 pb-10">
+                <div class="inline-block px-5 py-1.5 rounded-full bg-white text-[#111] text-[11px] font-black tracking-[0.1em] mb-12 mt-4 border-2 border-[#111] shadow-sm">
+                    這是游方銘做的小測驗-測試中
+                </div>
+                <div class="flex flex-col items-center w-full flex-grow justify-center">
+                    <div class="title-wrapper">
+                        <div class="title-sup">測測你是哪種</div>
+                        <h1 class="title-main">職場神獸</h1>
+                    </div>
+                    <div class="bg-white border-[4px] border-[#111] rounded-[28px] p-6 shadow-[10px_10px_0_#111] mt-6 max-w-[85%] transform rotate-[-2deg]">
+                        <p class="text-[#111] text-sm font-black leading-loose text-center">
+                            在危機四伏的職場叢林中，<br>
+                            你扮演著什麼樣的角色？<br>
+                            只需 5 題，立刻測出你的隱藏屬性！
+                        </p>
+                    </div>
+                </div>
+                <div class="w-full flex justify-center mt-auto pb-4">
+                    <button onclick="startQuiz()" class="px-8 py-3.5 rounded-[20px] bg-[#FF00FF] border-[4px] border-[#111] text-white font-black text-lg shadow-[7px_7px_0_#111] transform transition hover:scale-105 active:translate-y-[4px] active:translate-x-[4px] active:shadow-none flex items-center gap-3">
+                        開始測驗 <i class="ph-fill ph-arrow-fat-right text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 測驗頁 -->
+        <div id="page-quiz" class="page">
+            <div class="flex flex-col h-full w-full">
+                <div class="w-full pt-12 pb-6 flex items-center justify-between">
+                    <button onclick="restartQuiz()" class="bg-white border-[2px] border-[#111] rounded-full p-2 shadow-[2px_2px_0_#111] active:translate-y-[1px] active:shadow-none">
+                        <i class="ph-bold ph-house text-2xl text-[#111]"></i>
+                    </button>
+                    <div class="flex-grow mx-4 relative h-4 bg-white border-[3px] border-[#111] rounded-full overflow-hidden shadow-[3px_3px_0_rgba(0,0,0,0.05)]">
+                        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-[#FF00FF] transition-all duration-300 w-0"></div>
+                    </div>
+                    <span id="question-counter" class="text-sm font-black text-[#111] bg-white border-[2px] border-[#111] px-3 py-1 rounded-lg shadow-[2px_2px_0_#111]">1/5</span>
+                </div>
+
+                <div class="flex-grow flex flex-col justify-center items-center w-full pb-10">
+                    <div id="quiz-card" class="bg-white w-full border-[4px] border-[#111] rounded-[32px] p-6 shadow-[10px_10px_0_#111] relative z-10">
+                        <h2 id="question-text" class="text-xl font-black text-[#111] text-center mb-8 tracking-wide px-2">載入題目中...</h2>
+                        <div id="options-container" class="flex flex-col gap-4 w-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果頁 -->
+        <div id="page-result" class="page">
+            <div class="flex flex-col w-full h-full pt-12">
+                <div id="export-container" class="w-full p-2 flex-1 flex items-center">
+                    <div id="result-card" class="bg-white rounded-[32px] p-6 border-[4px] border-[#111] shadow-[8px_8px_0_#111] flex flex-col items-center text-center relative overflow-hidden max-h-full w-full">
+                        <div class="inline-block bg-[#FFD306] border-[2px] border-[#111] text-[#111] text-[10px] font-black px-4 py-1.5 rounded-full mt-2 mb-4 shadow-[2px_2px_0_#111] transform -rotate-2 flex-shrink-0">
+                            你的職場神獸是
+                        </div>
+                        <div class="overflow-y-auto w-full flex flex-col items-center px-1">
+                            <div id="result-icon" class="text-7xl mb-2 drop-shadow-md">🐾</div>
+                            <h2 id="result-title" class="text-3xl font-black text-[#111] mb-4 tracking-wide">結果標題</h2>
+                            <div id="result-tags" class="flex gap-2 justify-center mb-6 flex-wrap px-2"></div>
+                            <div class="bg-white border-[3px] border-[#111] rounded-[20px] p-5 w-full text-left shadow-[4px_4px_0_#111] mb-4">
+                                <p id="result-desc" class="text-[#111] font-bold text-sm leading-relaxed">結果詳細描述...</p>
+                            </div>
+                        </div>
+                        <div class="mt-auto pt-5 w-full flex justify-between items-center text-[10px] font-black text-[#111] border-t-[3px] border-dashed border-[#111] flex-shrink-0">
+                            <span>職場神獸測驗</span>
+                            <span id="current-date">2026.XX.XX</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full p-4 flex justify-between gap-4 flex-shrink-0">
+                    <button onclick="restartQuiz()" class="flex-1 py-4 bg-white border-[3px] border-[#111] rounded-2xl shadow-[4px_4px_0_#111] flex flex-col items-center justify-center gap-1 active:translate-y-[2px] active:shadow-none">
+                        <i class="ph-bold ph-arrow-counter-clockwise text-2xl"></i>
+                        <span class="text-sm font-black">再測一次</span>
+                    </button>
+                    <button onclick="showShareModal()" class="flex-1 py-4 bg-[#FFD306] border-[3px] border-[#111] rounded-2xl shadow-[4px_4px_0_#111] flex flex-col items-center justify-center gap-1 active:translate-y-[2px] active:shadow-none">
+                        <i class="ph-bold ph-share-network text-2xl"></i>
+                        <span class="text-sm font-black">分享結果</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分享彈窗 (修正圖標形狀與文字對齊) -->
+        <div id="share-modal-overlay" onclick="closeShareModal()">
+            <div id="share-modal" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-black text-[#111] flex items-center gap-2">
+                        <i class="ph-bold ph-share-network"></i> 分享給戰友
+                    </h3>
+                    <button onclick="closeShareModal()" class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500">
+                        <i class="ph-bold ph-x text-lg"></i>
+                    </button>
+                </div>
+                <div class="bg-white border-[3px] border-[#111] rounded-[20px] p-5 mb-8 shadow-[4px_4px_0_#111]">
+                    <p id="share-preview-title" class="font-black text-[#111] text-lg mb-2">我的職場神獸揭曉</p>
+                    <p class="text-gray-500 text-sm font-bold">點擊按鈕將結果分享給你的戰友們吧！</p>
+                </div>
+                <div class="flex justify-between items-start gap-2 px-1">
+                    <div class="flex-1 flex flex-col items-center gap-2 cursor-pointer group" onclick="copyResultLink()">
+                        <div class="w-14 h-14 bg-gray-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-sm flex-shrink-0 transition-transform group-active:scale-90">
+                            <i class="ph-bold ph-link-simple"></i>
+                        </div>
+                        <span class="text-[11px] font-black text-gray-600 text-center leading-tight">複製連結</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2 cursor-pointer group" onclick="shareSocial('fb')">
+                        <div class="w-14 h-14 bg-[#1877F2] rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-sm flex-shrink-0 transition-transform group-active:scale-90">
+                            FB
+                        </div>
+                        <span class="text-[11px] font-black text-gray-600 text-center leading-tight">Facebook</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2 cursor-pointer group" onclick="shareSocial('line')">
+                        <div class="w-14 h-14 bg-[#06C755] rounded-2xl flex items-center justify-center text-white font-black text-base shadow-sm flex-shrink-0 transition-transform group-active:scale-90">
+                            LINE
+                        </div>
+                        <span class="text-[11px] font-black text-gray-600 text-center leading-tight">LINE</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2 cursor-pointer group" onclick="shareSocial('threads')">
+                        <div class="w-14 h-14 bg-black rounded-2xl flex items-center justify-center text-white font-black text-[11px] shadow-sm flex-shrink-0 transition-transform group-active:scale-90">
+                            Threads
+                        </div>
+                        <span class="text-[11px] font-black text-gray-600 text-center leading-tight">Threads</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= 音樂與音效邏輯 =================
+        const bgMusic = document.getElementById('bg-music');
+        const clickSFX = document.getElementById('click-sfx');
+        const musicIcon = document.getElementById('music-icon');
+        const body = document.getElementById('main-body');
+
+        // 音量優化
+        clickSFX.volume = 1.0;
+
+        function playMusic() {
+            bgMusic.play().then(() => {
+                musicIcon.className = "ph-bold ph-speaker-high text-xl text-[#111]";
+            }).catch(e => {
+                console.log("自動播放暫時被攔截...");
+            });
+        }
+
+        function pauseMusic() {
+            bgMusic.pause();
+            musicIcon.className = "ph-bold ph-speaker-slash text-xl text-[#111]";
+        }
+
+        function toggleMusic() {
+            if (bgMusic.paused) playMusic();
+            else pauseMusic();
+        }
+
+        function playClickSFX() {
+            clickSFX.currentTime = 0;
+            clickSFX.volume = 1.0;
+            clickSFX.play().catch(e => {});
+        }
+
+        // 音效預熱邏輯
+        window.onload = function() {
+            const initAudio = () => {
+                playMusic();
+                // 預熱點擊音效
+                clickSFX.play().then(() => { clickSFX.pause(); clickSFX.currentTime = 0; });
+                document.removeEventListener('click', initAudio);
+                document.removeEventListener('touchstart', initAudio);
+            };
+            document.addEventListener('click', initAudio, { once: true });
+            document.addEventListener('touchstart', initAudio, { once: true });
+        };
+
+        const questions = [
+            { q: "星期一早上剛進辦公室，<br>你做的第一件事是？", options: [{ text: "立刻打開信箱，<br>安排整週作戰計畫", score: 0 }, { text: "默默去茶水間泡杯咖啡，<br>喚醒靈魂", score: 1 }, { text: "跟隔壁同事熱情早安，<br>交換週末八卦", score: 2 }, { text: "冷靜觀察大家，<br>默默開始處理例行公事", score: 3 }] },
+            { q: "老闆突然指派一個<br>沒人想接的超難專案，<br>你心裡的OS？", options: [{ text: "「太棒了！<br>這是我展現能力的好機會！」", score: 0 }, { text: "「蛤...為什麼是我？<br>能推掉嗎...」", score: 1 }, { text: "「我得趕快找幾個好隊友一起carry！」", score: 2 }, { text: "「先冷靜分析風險與資源再說。」", score: 3 }] },
+            { q: "期待已久的午休時間到了，<br>你通常怎麼度過？", options: [{ text: "邊吃飯邊看工作資料或產業新聞", score: 0 }, { text: "吃飽直接趴在桌上秒睡，<br>雷打不動", score: 1 }, { text: "揪團訂外送，<br>邊吃邊跟同事大聲聊天", score: 2 }, { text: "一個人去外面散步吹風，<br>享受獨處時光", score: 3 }] },
+            { q: "遇到雷隊友搞砸進度，<br>你會怎麼處理？", options: [{ text: "直接點出問題，<br>要求他立刻改善", score: 0 }, { text: "表面沒事，<br>私下默默幫他收拾爛攤子", score: 1 }, { text: "找其他同事抱怨，<br>但還是會一起把事做完", score: 2 }, { text: "重新分配工作架構，<br>避免他再出錯", score: 3 }] },
+            { 
+                q: "下班時間到了，<br>但手邊工作還沒告一段落，<br>你會？", 
+                options: [
+                    { text: "留下來加班！<br>今日事今日畢！", score: 0 }, 
+                    { text: "時間一到準時閃人，<br>明天再說！", score: 1 }, 
+                    { text: "帶回家舒服地躺在沙發上繼續做", score: 2 }, 
+                    { text: "評估輕重緩急，<br>不急的就列入明天代辦", score: 3 }
+                ] 
+            }
+        ];
+
+        const resultsData = [
+            { title: "霸道總裁獅", icon: "🦁", tags: ["領袖氣質", "目標導向", "行動派"], desc: "你天生自帶氣場，是團隊中的核心引擎！遇到困難從不退縮，反而覺得是挑戰。雖然有時會讓人覺得稍微強勢，但大家都很依賴你的決斷力。" },
+            { title: "敏捷閃電豹", icon: "🐆", tags: ["效率至上", "直球對決", "討厭拖拉"], desc: "天下武功，唯快不破！你是職場中的效率狂魔，最受不了慢吞吞的節奏。你能在最短時間內找到解決方案，執行力驚力。" },
+            { title: "人氣王海豚", icon: "🐬", tags: ["氣氛擔當", "高EQ", "神級公關"], desc: "你擁有超強的同理心與社交技巧，是辦公室裡的潤滑劑。無論多僵的場面，你都能輕鬆化解。大家都喜歡跟你共事！" },
+            { title: "靈活變色龍", icon: "🦎", tags: ["適應力強", "八面玲瓏", "生存大師"], desc: "你擁有極強的環境適應力，能根據不同老闆或專案隨時切換模式。遇到危機總能巧妙避開，不管環境怎麼變，你都能找到舒適圈。" },
+            { title: "智慧貓頭鷹", icon: "🦉", tags: ["冷靜分析", "細節控", "邏輯縝密"], desc: "你是團隊中的智庫！做事條理分明，喜歡用數據和邏輯說話。遇到危機時最冷靜的就是你，總能找出別人忽略的盲點。雖然話不多，但一開口就是關鍵。" },
+            { title: "默默耕耘牛", icon: "🐂", tags: ["責任感重", "吃苦耐勞", "最坦隊友"], desc: "你是老闆最安心的存在！做事踏實不浮誇，答應的事情絕對會做到好。記得要適時為自己發聲，不要被當成理所當然的濫好人喔。" },
+            { title: "佛系無尾熊", icon: "🐨", tags: ["與世無爭", "穩定輸出", "和平主義"], desc: "「隨緣、都好、沒關係」是你的職場專用口頭禪。你討厭衝突，雖然看起來懶洋洋的，但交代給你的公事總能安穩完成。" },
+            { title: "療癒系水豚", icon: "🦦", tags: ["情緒穩定", "極度Chill", "與世無爭"], desc: "你是職場中的最高境界：處變不驚。不管天塌下來還是老闆發飆，你都能保持內心的平靜。同事跟你相處會覺得壓力瞬間消失！" }
+        ];
+
+        let currentQuestionIndex = 0, totalScore = 0, currentResultTitle = "";
+
+        const showToast = (msg) => {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        };
+
+        const switchPage = (hidePage, showPage, isResult = false) => {
+            if (isResult) document.body.classList.add('result-mode');
+            else document.body.classList.remove('result-mode');
+            hidePage.style.display = 'none';
+            hidePage.classList.remove('active');
+            showPage.style.display = 'flex';
+            void showPage.offsetWidth; 
+            showPage.classList.add('active');
+            showPage.scrollTop = 0;
+        };
+
+        function triggerPopBurst(callback) {
+            const burst = document.getElementById('pop-burst');
+            burst.classList.add('active');
+            body.classList.add('shake-active');
+            setTimeout(() => { if (callback) callback(); }, 300); 
+            setTimeout(() => { 
+                burst.classList.remove('active');
+                body.classList.remove('shake-active');
+            }, 700); 
+        }
+
+        function startQuiz() {
+            playClickSFX();
+            triggerPopBurst(() => {
+                if (bgMusic.paused) playMusic();
+                currentQuestionIndex = 0;
+                totalScore = 0;
+                switchPage(document.getElementById('page-home'), document.getElementById('page-quiz'));
+                renderQuestion(true);
+            });
+        }
+
+        function restartQuiz() {
+            playClickSFX();
+            switchPage(document.querySelector('.page.active'), document.getElementById('page-home'));
+        }
+
+        function renderQuestion(isFirst = false) {
+            const qData = questions[currentQuestionIndex];
+            document.getElementById('progress-bar').style.width = `${(currentQuestionIndex / questions.length) * 100}%`;
+            document.getElementById('question-counter').textContent = `${currentQuestionIndex + 1}/${questions.length}`;
+            const quizCard = document.getElementById('quiz-card');
+            if (!isFirst) {
+                quizCard.style.opacity = 0;
+                setTimeout(updateContent, 200);
+            } else updateContent();
+
+            function updateContent() {
+                document.getElementById('question-text').innerHTML = `Q${currentQuestionIndex + 1}. ${qData.q}`;
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+                qData.options.forEach((opt) => {
+                    const btn = document.createElement('button');
+                    btn.className = "quiz-option w-full py-4 px-4 rounded-[20px] bg-white border-[3px] border-[#111] text-[#111] font-black text-base text-center shadow-[4px_4px_0_#111] cursor-pointer leading-snug";
+                    btn.innerHTML = `<span>${opt.text}</span>`;
+                    btn.onclick = () => handleOptionClick(btn, opt.score);
+                    container.appendChild(btn);
+                });
+                quizCard.style.opacity = 1;
+            }
+        }
+
+        function handleOptionClick(btnElement, score) {
+            playClickSFX();
+            document.querySelectorAll('.quiz-option').forEach(b => b.style.pointerEvents = 'none');
+            btnElement.classList.add('selected');
+            totalScore += score;
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) renderQuestion();
+                else {
+                    document.getElementById('progress-bar').style.width = `100%`;
+                    setTimeout(calculateAndShowResult, 200);
+                }
+            }, 300);
+        }
+
+        function calculateAndShowResult() {
+            let resultIndex = Math.min(Math.floor(totalScore / 2), resultsData.length - 1);
+            const result = resultsData[resultIndex];
+            currentResultTitle = result.title;
+            document.getElementById('result-icon').textContent = result.icon;
+            document.getElementById('result-title').textContent = result.title;
+            document.getElementById('result-desc').textContent = result.desc;
+            const today = new Date();
+            document.getElementById('current-date').textContent = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+            const tagsContainer = document.getElementById('result-tags');
+            tagsContainer.innerHTML = '';
+            result.tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = "px-3 py-1.5 bg-white border-[2px] border-[#111] text-[#111] rounded-full text-[10px] font-black shadow-[2px_2px_0_#111]";
+                span.textContent = `#${tag}`;
+                tagsContainer.appendChild(span);
+            });
+            switchPage(document.getElementById('page-quiz'), document.getElementById('page-result'), true);
+        }
+
+        function showShareModal() {
+            playClickSFX();
+            document.getElementById('share-preview-title').textContent = `我的職場神獸揭曉 - ${currentResultTitle}`;
+            const overlay = document.getElementById('share-modal-overlay');
+            overlay.style.display = 'block';
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
+            document.getElementById('share-modal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            playClickSFX();
+            document.getElementById('share-modal').classList.remove('active');
+            document.getElementById('share-modal-overlay').classList.remove('active');
+            setTimeout(() => { document.getElementById('share-modal-overlay').style.display = 'none'; }, 300);
+        }
+
+        function copyResultLink() {
+            playClickSFX();
+            const shareText = `我剛測出我是【${currentResultTitle}】！你也來測測看你在職場裡是哪種神獸吧！\n${window.location.href}`;
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = shareText; dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showToast("✅ 測驗連結與結果已複製！");
+            closeShareModal();
+        }
+
+        function shareSocial(platform) {
+            playClickSFX();
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(`我剛測出我是【${currentResultTitle}】！你也來測測看你在職場裡是哪種神獸吧！`);
+            let shareUrl = "";
+            switch(platform) {
+                case 'fb': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`; break;
+                case 'line': shareUrl = `https://line.me/R/msg/text/?${text}%20${url}`; break;
+                case 'threads': shareUrl = `https://www.threads.net/intent/post?text=${text}%20${url}`; break;
+            }
+            window.open(shareUrl, '_blank');
+            closeShareModal();
+        }
+    </script>
+</body>
+</html>
